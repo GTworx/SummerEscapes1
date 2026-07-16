@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SummerEscapes - Find your perfect summer getaway! Custom view types, vibes, and perimeter radius mapping for cities worldwide.">
+    <title>SummerEscapes | Premium Summer Travel Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet.js CSS for Interactive Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Floating Toast Notification System -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- Premium Header with Summer Vibe -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon-wrapper">
+                    <i class="fa-solid fa-sun sun-icon animated-sun"></i>
+                    <i class="fa-solid fa-water wave-icon"></i>
+                </div>
+                <h1>Summer<span>Escapes</span></h1>
+            </div>
+            <div class="header-quote">
+                <span class="quote-text">"Chase the sun, find your paradise."</span>
+            </div>
+            <div class="status-indicator">
+                <span class="pulse-dot"></span>
+                <span id="active-location-text">Ready to Explore</span>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Split Screen -->
+        <main class="app-body">
+            <!-- Left Pane: Controls & Results List -->
+            <aside class="sidebar-pane">
+                <div class="sidebar-card">
+                    <h2 class="section-title"><i class="fa-solid fa-sliders-h icon-primary"></i> Plan Your Escape</h2>
+                    
+                    <!-- Search Controls -->
+                    <div class="control-group">
+                        <label for="city-input"><i class="fa-solid fa-location-dot"></i> Designated City</label>
+                        <div class="input-with-action">
+                            <input type="text" id="city-input" placeholder="e.g., Nice, Amalfi, Bali, Barcelona..." value="Nice">
+                            <button id="search-btn" class="icon-only-btn" title="Search City"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Perimeter Range Slider -->
+                    <div class="control-group">
+                        <div class="label-with-value">
+                            <label for="perimeter-input"><i class="fa-solid fa-circle-dot"></i> Perimeter Radius</label>
+                            <span id="perimeter-value">15 km</span>
+                        </div>
+                        <input type="range" id="perimeter-input" min="2" max="50" value="15" class="custom-slider">
+                        <div class="slider-marks">
+                            <span>2 km</span>
+                            <span>25 km</span>
+                            <span>50 km</span>
+                        </div>
+                    </div>
+
+                    <!-- View Options (Multi-select Pills) -->
+                    <div class="control-group">
+                        <label><i class="fa-solid fa-eye"></i> View Options</label>
+                        <div class="pill-selectors" id="view-options">
+                            <button class="pill-btn active" data-value="sea"><i class="fa-solid fa-umbrella-beach"></i> Sea</button>
+                            <button class="pill-btn active" data-value="lake"><i class="fa-solid fa-water"></i> Lake</button>
+                            <button class="pill-btn active" data-value="mountain"><i class="fa-solid fa-mountain-sun"></i> Mountain</button>
+                            <button class="pill-btn active" data-value="forest"><i class="fa-solid fa-tree"></i> Forest</button>
+                            <button class="pill-btn active" data-value="city"><i class="fa-solid fa-city"></i> City</button>
+                        </div>
+                    </div>
+
+                    <!-- Vibe Selection (Single choice Pills) -->
+                    <div class="control-group">
+                        <label><i class="fa-solid fa-compass"></i> Vibe / Category</label>
+                        <div class="vibe-selectors" id="vibe-options">
+                            <button class="vibe-btn active" data-value="all"><i class="fa-solid fa-border-all"></i> All Vibes</button>
+                            <button class="vibe-btn" data-value="family"><i class="fa-solid fa-child-reaching"></i> Family</button>
+                            <button class="vibe-btn" data-value="business"><i class="fa-solid fa-briefcase"></i> Business</button>
+                            <button class="vibe-btn" data-value="casual"><i class="fa-solid fa-mug-saucer"></i> Casual</button>
+                        </div>
+                    </div>
+
+                    <!-- Fetch / Refresh Button -->
+                    <button id="fetch-btn" class="primary-gradient-btn">
+                        <i class="fa-solid fa-rotate"></i> Discover Escapes
+                    </button>
+                </div>
+
+                <!-- Results List Card -->
+                <div class="results-card">
+                    <div class="results-header">
+                        <h3 class="results-title"><i class="fa-solid fa-list-check"></i> Matching Escapes</h3>
+                        <span id="results-count" class="badge">0 found</span>
+                    </div>
+                    
+                    <!-- Search Results Listing -->
+                    <div class="results-list" id="venues-list">
+                        <!-- Dynamic items will be injected here -->
+                        <div class="empty-state">
+                            <i class="fa-solid fa-compass-drafting"></i>
+                            <p>Click "Discover Escapes" or type a city to search.</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Pane: Interactive Map & Detailed Card Overlay -->
+            <section class="map-pane">
+                <div id="map-container">
+                    <div id="map"></div>
+                    
+                    <!-- Loader Overlay -->
+                    <div id="map-loader" class="map-loader hidden">
+                        <div class="spinner-wrapper">
+                            <div class="sun-spinner"></div>
+                            <span class="loading-text">Fetching sunny spots...</span>
+                        </div>
+                    </div>
+
+                    <!-- Floating Summer Tip Panel (Welcome/Hint) -->
+                    <div id="welcome-panel" class="floating-panel welcome-panel">
+                        <div class="panel-header">
+                            <h4>☀️ Summer Travel Hub</h4>
+                            <button class="close-panel-btn" onclick="document.getElementById('welcome-panel').classList.add('hidden')">&times;</button>
+                        </div>
+                        <p>Explore gorgeous summer destinations. Adjust filters on the left, then click any map pin or listing card to view full details, pictures, and share them with friends!</p>
+                    </div>
+
+                    <!-- Details Slide-out / Bottom Sheet Overlay -->
+                    <div id="details-overlay" class="details-overlay hidden">
+                        <div class="details-card-header">
+                            <div class="header-image-container">
+                                <img id="detail-image" src="" alt="Venue Escape Image">
+                                <div class="header-gradient-overlay"></div>
+                                <button id="close-details-btn" class="round-close-btn">&times;</button>
+                                <span id="detail-view-badge" class="view-tag-badge">Sea View</span>
+                            </div>
+                        </div>
+                        
+                        <div class="details-card-body">
+                            <div class="venue-identity">
+                                <h3 id="detail-name">Sunny Palms Resort</h3>
+                                <div class="rating-vibe-row">
+                                    <div class="rating-stars" id="detail-rating">
+                                        <!-- Stars dynamically rendered -->
+                                    </div>
+                                    <span id="detail-vibe-badge" class="vibe-tag-badge">Casual</span>
+                                </div>
+                                <div class="distance-row">
+                                    <i class="fa-solid fa-location-arrow"></i> <span id="detail-distance">1.2 km from city center</span>
+                                </div>
+                            </div>
+                            
+                            <p id="detail-description" class="venue-description">
+                                A premium seafront escape with breathtaking Mediterranean views, private pool access, and authentic gourmet dining options.
+                            </p>
+
+                            <div class="amenities-section">
+                                <h5>Included Amenities</h5>
+                                <div class="amenity-grid" id="detail-amenities">
+                                    <!-- Dynamic icons -->
+                                </div>
+                            </div>
+
+                            <div class="share-actions-section">
+                                <button id="share-friend-btn" class="share-action-btn secondary-btn">
+                                    <i class="fa-solid fa-link"></i> Copy Link
+                                </button>
+                                <button id="share-whatsapp-btn" class="share-action-btn whatsapp-btn">
+                                    <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Leaflet.js Script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Custom Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
